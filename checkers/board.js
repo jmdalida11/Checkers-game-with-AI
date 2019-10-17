@@ -21,6 +21,10 @@ const SQR = {
     D1:10, D2:16, D3:22, D4:28, D5:34, D6:40, D7:46, D8:52
 };
 
+const imgs = [null, new Image(), new Image()];
+imgs[1].src = 'r.png';
+imgs[2].src = 'y.png';
+
 const SIDE_SQR = [SQR.A1, SQR.D2, SQR.A3, SQR.D4, SQR.A5, SQR.D6, SQR.A7, SQR.D8];
 
 const BOARD_SIZE = 60;
@@ -68,7 +72,15 @@ function initBoard(){
             BOARD_DEF.board[SQR[key]] = PIECE_TYPE.BLACK_PIECE;
         }
     });
+}
 
+function movePiece(src, target){
+    if(BOARD_DEF.board[src] != PIECE_TYPE.NO_PIECE && BOARD_DEF.board[target] == PIECE_TYPE.NO_PIECE){
+        BOARD_DEF.board[target] = BOARD_DEF.board[src];
+        BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
+        return true;
+    }
+    return false;
 }
 
 function hasPieceAt(pos, index){

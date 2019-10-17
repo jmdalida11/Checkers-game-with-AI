@@ -9,30 +9,27 @@ document.body.append(canvas);
 
 const tilesize = canvas.width / 8;
 
-const imgs = [null, new Image(), new Image()];
-imgs[1].src = 'r.png';
-imgs[2].src = 'y.png';
+const tiles = [];
 
-function draw(){
-    context.clearRect(0, 0, canvas.width, canvas.height);
+let moving = false;
+let mousepos = 0;
+let piecemoving = null;
+
+function init(){
+
     let colorblack = false;
-    let i = 0;
-
+    let indexOfSqr = 0;
     for(let r=0; r<8; r++){
         for(let c=0; c<8; c++){
+            let p = null;
+            if(colorblack)
+            {
+                if(BOARD_DEF.board[sqr48[indexOfSqr]] != PIECE_TYPE.NO_PIECE)
+                    p = new Piece(c*tilesize, r*tilesize, tilesize, BOARD_DEF.board[sqr48[indexOfSqr]]);
+                indexOfSqr++;
+            }
+            tiles.push(new Tile(c*tilesize, r*tilesize, tilesize, colorblack, p));
 
-            if(colorblack){
-                context.fillStyle = 'black';
-            }else{
-                context.fillStyle = 'white';
-            }
-            context.fillRect(c*tilesize, r*tilesize, tilesize, tilesize);
-            if(BOARD_DEF.board[sqr48[i]] == PIECE_TYPE.WHITE_PIECE && colorblack){
-                context.drawImage(imgs[1], c*tilesize, r*tilesize, tilesize, tilesize);
-            }else if(BOARD_DEF.board[sqr48[i]] == PIECE_TYPE.BLACK_PIECE && colorblack){
-                context.drawImage(imgs[PIECE_TYPE.BLACK_PIECE], c*tilesize, r*tilesize, tilesize, tilesize);
-            }
-            if (colorblack) i++;
             colorblack = !colorblack;
         }
         colorblack = !colorblack;
@@ -40,8 +37,88 @@ function draw(){
 
 }
 
+function draw(){
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    for(let i=0; i<tiles.length; i++){
+        tiles[i].draw(context);
+    }
+
+    for(let i=0; i<tiles.length; i++){
+        tiles[i].drawPiece(context);
+    }
+
+}
+
+function collide( source, target ) {
+    return !(
+        ( ( source.y + source.h ) < ( target.y ) ) ||
+        ( source.y > ( target.y + target.h ) ) ||
+        ( ( source.x + source.w ) < target.x ) ||
+        ( source.x > ( target.x + target.w ) )
+    );
+}
+
+canvas.onmouseup = function(e){
+    moving = false;
+    let mp = getPos(canvas, e);
+
+    for(let i=0; i<tiles.length; i++){
+        let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
+        if(collide(mp, t) && piecemoving != null && tiles[i] != piecemoving){
+            if(!piecemoving.move()) break;
+
+            tiles[i].piece = piecemoving.piece;
+            tiles[i].piece.x = tiles[i].x;
+            tiles[i].piece.y = tiles[i].y;
+            tiles[i].piece.size = tiles[i].size;
+            piecemoving.piece = null;
+            piecemoving = null;
+            return;
+        }
+    }
+
+    if(piecemoving != null){
+        piecemoving.piece.x = piecemoving.x;
+        piecemoving.piece.y = piecemoving.y;
+        piecemoving.piece.size = piecemoving.size;
+        piecemoving = null;
+    }
+
+}
+
+canvas.onmousedown =  function(e){
+    let mp = getPos(canvas, e);
+
+    for(let i=0; i<tiles.length; i++){
+        let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
+        if(collide(mp, t) && tiles[i].piece != null){
+            piecemoving = tiles[i];
+            mp.size = tilesize;
+            piecemoving.piece.mouseMove(mp);
+            moving = true;
+            break;
+        }
+    }
+}
+
+canvas.onmousemove = function(e){
+    if(moving && piecemoving != null){
+        let pos = getPos(canvas, e);
+        pos.size = tilesize;
+        piecemoving.piece.mouseMove(pos);
+    }
+}
+
+function getPos(c, e){
+    var rect = c.getBoundingClientRect();
+    return {x:e.clientX - rect.left, y: e.clientY - rect.top, h: 1, w:1};
+}
+
 initBoard();
+init();
+printBoard();
 
 setInterval(function(){
     draw();
-}, 1000)
+}, 1000/60);
