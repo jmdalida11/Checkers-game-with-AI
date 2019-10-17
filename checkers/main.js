@@ -22,14 +22,16 @@ function init(){
     for(let r=0; r<8; r++){
         for(let c=0; c<8; c++){
             let p = null;
-            if(colorblack)
-            {
+            if(colorblack){
                 if(BOARD_DEF.board[sqr48[indexOfSqr]] != PIECE_TYPE.NO_PIECE)
+                {
                     p = new Piece(c*tilesize, r*tilesize, tilesize, BOARD_DEF.board[sqr48[indexOfSqr]]);
+                }
+                tiles.push(new Tile(c*tilesize, r*tilesize, tilesize, colorblack, sqr48[indexOfSqr], p));
                 indexOfSqr++;
+            }else{
+                tiles.push(new Tile(c*tilesize, r*tilesize, tilesize, colorblack, SQR.NONE, p));
             }
-            tiles.push(new Tile(c*tilesize, r*tilesize, tilesize, colorblack, p));
-
             colorblack = !colorblack;
         }
         colorblack = !colorblack;
@@ -65,9 +67,8 @@ canvas.onmouseup = function(e){
 
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
-        if(collide(mp, t) && piecemoving != null && tiles[i] != piecemoving){
-            if(!piecemoving.piece.move()) break;
-
+        if(collide(mp, t) && piecemoving != null && tiles[i] != piecemoving && tiles[i].sqr != SQR.NONE){
+            if(!piecemoving.piece.move(piecemoving.sqr, tiles[i].sqr)) break;
             tiles[i].piece = piecemoving.piece;
             tiles[i].piece.x = tiles[i].x;
             tiles[i].piece.y = tiles[i].y;
@@ -92,7 +93,7 @@ canvas.onmousedown =  function(e){
 
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
-        if(collide(mp, t) && tiles[i].piece != null){
+        if(collide(mp, t) && tiles[i].piece != null && tiles[i].sqr != SQR.NONE){
             piecemoving = tiles[i];
             mp.size = tilesize;
             piecemoving.piece.mouseMove(mp);
@@ -117,8 +118,11 @@ function getPos(c, e){
 
 initBoard();
 init();
-printBoard();
-
+let zz = document.createElement('div');
+document.body.append(zz);
 setInterval(function(){
+    zz.innerHTML = "";
+    zz.innerHTML = printBoard();
+
     draw();
 }, 1000/60);

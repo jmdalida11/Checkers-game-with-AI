@@ -17,8 +17,7 @@ class Piece{
         this.y = mp.y - this.size /2;
     }
 
-    move(pos){
-        return true;
-        //movePiece({}, {});
+    move(src, target){
+        return movePiece(src, target);
     }
 }

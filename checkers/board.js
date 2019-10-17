@@ -1,3 +1,5 @@
+const PLAYER = {P1: 1, P2: 2};
+
 const PIECE_TYPE = {
     NO_PIECE: 0,
     WHITE_PIECE: 1,
@@ -14,11 +16,19 @@ const RANK = {
     RANK_NONE: 9
 };
 
+const OFF_BOARD = [
+    0,1,2,3,4,5,
+    6,12,18,24,30,36,42,48,54,
+    11,17,23,29,35,41,47,53,59,
+    55,56,57,58
+];
+
 const SQR = {
     A1:7, A2:13, A3:19, A4:25, A5:31, A6:37, A7:43, A8:49,
     B1:8, B2:14, B3:20, B4:26, B5:32, B6:38, B7:44, B8:50,
     C1:9, C2:15, C3:21, C4:27, C5:33, C6:39, C7:45, C8:51,
-    D1:10, D2:16, D3:22, D4:28, D5:34, D6:40, D7:46, D8:52
+    D1:10, D2:16, D3:22, D4:28, D5:34, D6:40, D7:46, D8:52,
+    NONE: 0
 };
 
 const imgs = [null, new Image(), new Image()];
@@ -78,9 +88,28 @@ function movePiece(src, target){
     if(BOARD_DEF.board[src] != PIECE_TYPE.NO_PIECE && BOARD_DEF.board[target] == PIECE_TYPE.NO_PIECE){
         BOARD_DEF.board[target] = BOARD_DEF.board[src];
         BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
+
+        if(PIECE_TYPE.WHITE_PIECE == BOARD_DEF.board[target]){
+            BOARD_DEF.wPos[BOARD_DEF.wPos.indexOf(src)] = target;
+        }else if(PIECE_TYPE.BLACK_PIECE == BOARD_DEF.board[target]){
+            BOARD_DEF.bPos[BOARD_DEF.bPos.indexOf(src)] = target;
+        }
+
         return true;
     }
     return false;
+}
+
+function generateMove(player){
+
+    let possibleMoves = [];
+
+    if(player == PLAYER.P1){
+        for(let i=0; BOARD_DEF.wPos.length; i++){
+
+        }
+    }
+
 }
 
 function hasPieceAt(pos, index){
@@ -88,22 +117,24 @@ function hasPieceAt(pos, index){
 }
 
 function printBoard(){
-    document.write("<center>");
+    let s = "";
+    s += "<center>";
     let x = 0;
-    let y = true;
+    let y = false;
    for(let i=0; i<sqr48.length*2; i++){
         if(i % 8 == 0)
         {
-            document.write("<br>");
+            s += "<br>";
             y = !y;
         }
         if(i % 2 == 0){
-            if(y) document.write("--");
-            document.write(BOARD_DEF.board[sqr48[x]]);
-            if(!y) document.write("--");
+            if(y) s += "--";
+            s += ""+BOARD_DEF.board[sqr48[x]];
+            if(!y) s += "--";
             x++;
         }
     }
-   document.write("</center>");
+   s += "</center>";
+   return s;
 }
 

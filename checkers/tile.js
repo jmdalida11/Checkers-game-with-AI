@@ -1,8 +1,9 @@
 class Tile{
-    constructor(x, y, size, c, p=null){
+    constructor(x, y, size, c, sqr, p=null){
         this.x = x;
         this.y = y;
         this.size = size;
+        this.sqr = sqr;
         this.piece = p;
         if(c)
             this.color = 'black';
