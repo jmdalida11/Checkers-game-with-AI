@@ -93,11 +93,17 @@ canvas.onmousedown =  function(e){
 
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
-        if(collide(mp, t) && tiles[i].piece != null && tiles[i].sqr != SQR.NONE){
-            piecemoving = tiles[i];
-            mp.size = tilesize;
-            piecemoving.piece.mouseMove(mp);
-            moving = true;
+        if(collide(mp, t) && tiles[i].piece != null && tiles[i].sqr != SQR.NONE && BOARD_DEF.move == tiles[i].piece.pieceType){
+
+            for(let moves of BOARD_DEF.availableMoves){
+                if(tiles[i].sqr == moves.piece){
+                    piecemoving = tiles[i];
+                    mp.size = tilesize;
+                    piecemoving.piece.mouseMove(mp);
+                    moving = true;
+                    break;
+                }
+            }
             break;
         }
     }
@@ -118,11 +124,18 @@ function getPos(c, e){
 
 initBoard();
 init();
-let zz = document.createElement('div');
-document.body.append(zz);
+BOARD_DEF.availableMoves = generateMove(BOARD_DEF.move);
+
+if(DEBUG){
+    var zz = document.createElement('div');
+    document.body.append(zz);
+}
+
 setInterval(function(){
-    zz.innerHTML = "";
-    zz.innerHTML = printBoard();
+    if(DEBUG){
+        zz.innerHTML = "";
+        zz.innerHTML = printBoard();
+    }
 
     draw();
 }, 1000/60);

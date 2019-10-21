@@ -1,9 +1,23 @@
+var DEBUG = false;
+
+const imgs = [null, new Image(), new Image()];
+imgs[1].src = 'r.png';
+imgs[2].src = 'y.png';
+
 const PLAYER = {P1: 1, P2: 2};
 
 const PIECE_TYPE = {
     NO_PIECE: 0,
     WHITE_PIECE: 1,
     BLACK_PIECE: 2
+};
+
+const SQR = {
+    A1:7, A2:13, A3:19, A4:25, A5:31, A6:37, A7:43, A8:49,
+    B1:8, B2:14, B3:20, B4:26, B5:32, B6:38, B7:44, B8:50,
+    C1:9, C2:15, C3:21, C4:27, C5:33, C6:39, C7:45, C8:51,
+    D1:10, D2:16, D3:22, D4:28, D5:34, D6:40, D7:46, D8:52,
+    NONE: 0
 };
 
 const FILE = {
@@ -23,19 +37,17 @@ const OFF_BOARD = [
     55,56,57,58
 ];
 
-const SQR = {
-    A1:7, A2:13, A3:19, A4:25, A5:31, A6:37, A7:43, A8:49,
-    B1:8, B2:14, B3:20, B4:26, B5:32, B6:38, B7:44, B8:50,
-    C1:9, C2:15, C3:21, C4:27, C5:33, C6:39, C7:45, C8:51,
-    D1:10, D2:16, D3:22, D4:28, D5:34, D6:40, D7:46, D8:52,
-    NONE: 0
-};
+const EVEN_RANK_SQR = [
+    SQR.A2, SQR.B2, SQR.C2, SQR.D2, SQR.A4, SQR.B4, SQR.C4, SQR.D4,
+    SQR.A6, SQR.B6, SQR.C6, SQR.D6, SQR.A8, SQR.B8, SQR.C8, SQR.D8
+];
 
-const imgs = [null, new Image(), new Image()];
-imgs[1].src = 'r.png';
-imgs[2].src = 'y.png';
+const ODD_RANK_SQR = [
+    SQR.A1, SQR.B1, SQR.C1, SQR.D1, SQR.A3, SQR.B3, SQR.C3, SQR.D3,
+    SQR.A5, SQR.B5, SQR.C5, SQR.D5, SQR.A7, SQR.B7, SQR.C7, SQR.D7
+];
 
-const SIDE_SQR = [SQR.A1, SQR.D2, SQR.A3, SQR.D4, SQR.A5, SQR.D6, SQR.A7, SQR.D8];
+const SIDE_SQR = [SQR.A2, SQR.A4, SQR.A6, SQR.A8, SQR.D1, SQR.D3, SQR.D5, SQR.D7];
 
 const BOARD_SIZE = 60;
 const BOARD_DEF = {};
@@ -43,16 +55,16 @@ const BOARD_DEF = {};
 const sqr48 = [];
 
 BOARD_DEF.board = new Array(BOARD_SIZE);
-BOARD_DEF.move = 0;
+BOARD_DEF.move = PLAYER.P2;
 BOARD_DEF.pCount = new Array(3);
 
-BOARD_DEF.wPos = [
+BOARD_DEF.wPieces = [
     SQR.A1, SQR.B1, SQR.C1, SQR.D1,
     SQR.A2, SQR.B2, SQR.C2, SQR.D2,
     SQR.A3, SQR.B3, SQR.C3, SQR.D3
 ];
 
-BOARD_DEF.bPos = [
+BOARD_DEF.bPieces = [
     SQR.A8, SQR.B8, SQR.C8, SQR.D8,
     SQR.A7, SQR.B7, SQR.C7, SQR.D7,
     SQR.A6, SQR.B6, SQR.C6, SQR.D6
@@ -74,11 +86,11 @@ function initBoard(){
     }
 
     Object.keys(SQR).forEach(function(key) {
-        if(hasPieceAt(BOARD_DEF.wPos, SQR[key])){
+        if(hasPieceAt(BOARD_DEF.wPieces, SQR[key])){
             BOARD_DEF.board[SQR[key]] = PIECE_TYPE.WHITE_PIECE;
 
         }
-        if(hasPieceAt(BOARD_DEF.bPos, SQR[key])){
+        if(hasPieceAt(BOARD_DEF.bPieces, SQR[key])){
             BOARD_DEF.board[SQR[key]] = PIECE_TYPE.BLACK_PIECE;
         }
     });
@@ -86,30 +98,79 @@ function initBoard(){
 
 function movePiece(src, target){
     if(BOARD_DEF.board[src] != PIECE_TYPE.NO_PIECE && BOARD_DEF.board[target] == PIECE_TYPE.NO_PIECE){
-        BOARD_DEF.board[target] = BOARD_DEF.board[src];
-        BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
-
-        if(PIECE_TYPE.WHITE_PIECE == BOARD_DEF.board[target]){
-            BOARD_DEF.wPos[BOARD_DEF.wPos.indexOf(src)] = target;
-        }else if(PIECE_TYPE.BLACK_PIECE == BOARD_DEF.board[target]){
-            BOARD_DEF.bPos[BOARD_DEF.bPos.indexOf(src)] = target;
+        for(let m of BOARD_DEF.availableMoves){
+            if(m.piece == src && m.moves.includes(target)){
+                BOARD_DEF.board[target] = BOARD_DEF.board[src];
+                BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
+                if(PIECE_TYPE.WHITE_PIECE == BOARD_DEF.board[target]){
+                    BOARD_DEF.wPieces[BOARD_DEF.wPieces.indexOf(src)] = target;
+                }else if(PIECE_TYPE.BLACK_PIECE == BOARD_DEF.board[target]){
+                    BOARD_DEF.bPieces[BOARD_DEF.bPieces.indexOf(src)] = target;
+                }
+                switchPlayer();
+                return true;
+            }
         }
-
-        return true;
     }
     return false;
 }
 
-function generateMove(player){
+function switchPlayer(){
+    BOARD_DEF.move = BOARD_DEF.move == PLAYER.P1 ? PLAYER.P2 : PLAYER.P1;
+    BOARD_DEF.availableMoves = generateMove(BOARD_DEF.move);
+}
 
+function generateMove(player){
     let possibleMoves = [];
+    let pieceCount = 0;
+    let pieces = [];
 
     if(player == PLAYER.P1){
-        for(let i=0; BOARD_DEF.wPos.length; i++){
-
-        }
+        pieceCount = BOARD_DEF.wPieces.length;
+        pieces = BOARD_DEF.wPieces;
+    }else if(player == PLAYER.P2){
+        pieceCount = BOARD_DEF.bPieces.length;
+        pieces = BOARD_DEF.bPieces;
     }
 
+    for(let i=0; i<pieceCount; i++){
+        let moves = moveCount(player, pieces[i]);
+        let m = {piece: pieces[i], moves: []};
+
+        if(BOARD_DEF.board[pieces[i] + moves[0]] == PIECE_TYPE.NO_PIECE && !inOffset(pieces[i] + moves[0])){
+            m.moves.push(pieces[i] + moves[0]);
+        }
+        if(BOARD_DEF.board[pieces[i] + moves[1]] == PIECE_TYPE.NO_PIECE && !inOffset(pieces[i] + moves[1])){
+            m.moves.push(pieces[i] + moves[1]);
+        }
+
+        if(m.moves.length > 0)
+            possibleMoves.push(m)
+    }
+    return possibleMoves;
+}
+
+function moveCount(player, sqr){
+    if(player == PLAYER.P1){
+        if(EVEN_RANK_SQR.includes(sqr)){
+            return [5, 6];
+        }else if(ODD_RANK_SQR.includes(sqr)){
+            return [6, 7];
+        }
+    }
+    else if(player == PLAYER.P2)
+    {
+        if(EVEN_RANK_SQR.includes(sqr)){
+            return [-6, -7];
+        }else if(ODD_RANK_SQR.includes(sqr)){
+            return [-5, -6];
+        }
+    }
+    return [0,0];
+}
+
+function inOffset(pos){
+    return OFF_BOARD.includes(pos);
 }
 
 function hasPieceAt(pos, index){

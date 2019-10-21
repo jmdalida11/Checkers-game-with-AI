@@ -14,6 +14,13 @@ class Tile{
     draw(context){
         context.fillStyle = this.color;
         context.fillRect(this.x, this.y, this.size, this.size);
+        if(DEBUG){
+            if(this.color == 'black'){
+            context.fillStyle = "blue";
+            context.font = "30px Arial";
+            context.fillText(this.sqr, this.x, this.y);
+            }
+        }
     }
 
     drawPiece(context){
