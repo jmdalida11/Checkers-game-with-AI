@@ -68,13 +68,37 @@ canvas.onmouseup = function(e){
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
         if(collide(mp, t) && piecemoving != null && tiles[i] != piecemoving && tiles[i].sqr != SQR.NONE){
-            if(!piecemoving.piece.move(piecemoving.sqr, tiles[i].sqr)) break;
-            tiles[i].piece = piecemoving.piece;
-            tiles[i].piece.x = tiles[i].x;
-            tiles[i].piece.y = tiles[i].y;
-            tiles[i].piece.size = tiles[i].size;
-            piecemoving.piece = null;
-            piecemoving = null;
+            let move = piecemoving.piece.move(piecemoving.sqr, tiles[i].sqr, tiles);
+
+            if(!move[0]) break;
+
+            switch(move[1])
+            {
+                case MOVE_TYPE.MOVE_NORMAL:
+                {
+                    tiles[i].piece = piecemoving.piece;
+                    tiles[i].piece.x = tiles[i].x;
+                    tiles[i].piece.y = tiles[i].y;
+                    tiles[i].piece.size = tiles[i].size;
+                    piecemoving.piece = null;
+                    piecemoving = null;
+                    break;
+                }
+                case MOVE_TYPE.MOVE_CAPTURE:
+                {
+                    tiles[i].piece = piecemoving.piece;
+                    tiles[i].piece.x = tiles[i].x;
+                    tiles[i].piece.y = tiles[i].y;
+                    tiles[i].piece.size = tiles[i].size;
+
+                    move[2].piece = null;
+
+                    piecemoving.piece = null;
+                    piecemoving = null;
+                    break;
+                }
+            }
+
             return;
         }
     }

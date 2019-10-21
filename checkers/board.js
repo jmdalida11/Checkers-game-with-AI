@@ -70,6 +70,11 @@ BOARD_DEF.bPieces = [
     SQR.A6, SQR.B6, SQR.C6, SQR.D6
 ];
 
+const MOVE_TYPE = {
+    MOVE_NORMAL : 0,
+    MOVE_CAPTURE : 1
+};
+
 function frToSqr(f, r){
     return (7 + f) + (r * 6);
 }
@@ -96,23 +101,51 @@ function initBoard(){
     });
 }
 
-function movePiece(src, target){
+function movePiece(src, target, tiles){
     if(BOARD_DEF.board[src] != PIECE_TYPE.NO_PIECE && BOARD_DEF.board[target] == PIECE_TYPE.NO_PIECE){
         for(let m of BOARD_DEF.availableMoves){
             if(m.piece == src && m.moves.includes(target)){
-                BOARD_DEF.board[target] = BOARD_DEF.board[src];
-                BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
-                if(PIECE_TYPE.WHITE_PIECE == BOARD_DEF.board[target]){
-                    BOARD_DEF.wPieces[BOARD_DEF.wPieces.indexOf(src)] = target;
-                }else if(PIECE_TYPE.BLACK_PIECE == BOARD_DEF.board[target]){
-                    BOARD_DEF.bPieces[BOARD_DEF.bPieces.indexOf(src)] = target;
-                }
+                insertPiece(src, target);
                 switchPlayer();
-                return true;
+                return [true, MOVE_TYPE.MOVE_NORMAL];
+            }else if(m.piece == src && m.captures.length > 0){
+                for(let capture of m.captures){
+                    if(target == capture.to){
+                        removePiece(capture.remove);
+                        insertPiece(src, target);
+                        switchPlayer();
+                        let x;
+                        for(let t of tiles){
+                            if (t.sqr == capture.remove){
+                                x = t;
+                            }
+                        }
+                        return [true, MOVE_TYPE.MOVE_CAPTURE, x];
+                    }
+                }
             }
         }
     }
-    return false;
+    return [false];
+}
+
+function removePiece(sqr){
+    if(BOARD_DEF.board[sqr] == PLAYER.P1){
+        BOARD_DEF.wPieces.splice(BOARD_DEF.wPieces.indexOf(sqr), 1);
+    }else if(BOARD_DEF.board[sqr] == PLAYER.P2){
+        BOARD_DEF.bPieces.splice(BOARD_DEF.bPieces.indexOf(sqr),1);
+    }
+    BOARD_DEF.board[sqr] = PIECE_TYPE.NO_PIECE;
+}
+
+function insertPiece(src, target){
+    BOARD_DEF.board[target] = BOARD_DEF.board[src];
+    BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
+    if(PIECE_TYPE.WHITE_PIECE == BOARD_DEF.board[target]){
+        BOARD_DEF.wPieces[BOARD_DEF.wPieces.indexOf(src)] = target;
+    }else if(PIECE_TYPE.BLACK_PIECE == BOARD_DEF.board[target]){
+        BOARD_DEF.bPieces[BOARD_DEF.bPieces.indexOf(src)] = target;
+    }
 }
 
 function switchPlayer(){
@@ -135,16 +168,33 @@ function generateMove(player){
 
     for(let i=0; i<pieceCount; i++){
         let moves = moveCount(player, pieces[i]);
-        let m = {piece: pieces[i], moves: []};
+        let m = {piece: pieces[i], moves: [], captures: []};
 
-        if(BOARD_DEF.board[pieces[i] + moves[0]] == PIECE_TYPE.NO_PIECE && !inOffset(pieces[i] + moves[0])){
+        let move1 = pieces[i] + moves[0];
+        let move2 = pieces[i] + moves[1];
+
+        if(BOARD_DEF.board[move1] == PIECE_TYPE.NO_PIECE && !inOffset(move1)){
             m.moves.push(pieces[i] + moves[0]);
         }
-        if(BOARD_DEF.board[pieces[i] + moves[1]] == PIECE_TYPE.NO_PIECE && !inOffset(pieces[i] + moves[1])){
+        if(BOARD_DEF.board[move2] == PIECE_TYPE.NO_PIECE && !inOffset(move2)){
             m.moves.push(pieces[i] + moves[1]);
         }
+        if(BOARD_DEF.board[move1] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move1] && !inOffset(move1)){
+            let moveTemp = moveCount(player, move1);
 
-        if(m.moves.length > 0)
+            if(BOARD_DEF.board[move1 + moveTemp[0]] == PIECE_TYPE.NO_PIECE  && !inOffset(move1 + moveTemp[0])){
+                m.captures.push({to: move1 + moveTemp[0], remove: move1});
+            }
+        }
+        if(BOARD_DEF.board[move2] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move2] && !inOffset(move2)){
+            let moveTemp = moveCount(player, move2);
+
+            if(BOARD_DEF.board[move2 + moveTemp[1]] == PIECE_TYPE.NO_PIECE  && !inOffset(move2 + moveTemp[1])){
+                m.captures.push({to: move2 + moveTemp[1], remove: move2});
+            }
+        }
+
+        if(m.moves.length > 0 || m.captures.length > 0)
             possibleMoves.push(m)
     }
     return possibleMoves;
