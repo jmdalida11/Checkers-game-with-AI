@@ -1,4 +1,4 @@
-var DEBUG = true;
+var DEBUG = false;
 
 const imgs = [null, new Image(), new Image()];
 imgs[1].src = 'r.png';
@@ -9,7 +9,9 @@ const PLAYER = {P1: 1, P2: 2};
 const PIECE_TYPE = {
     NO_PIECE: 0,
     WHITE_PIECE: 1,
-    BLACK_PIECE: 2
+    BLACK_PIECE: 2,
+    WHITE_SUPER_PIECE: 3,
+    BLACK_SUPER_PIECE: 4
 };
 
 const SQR = {
@@ -56,7 +58,6 @@ const sqr48 = [];
 
 BOARD_DEF.board = new Array(BOARD_SIZE);
 BOARD_DEF.move = PLAYER.P2;
-BOARD_DEF.pCount = new Array(3);
 
 BOARD_DEF.wPieces = [
     SQR.A1, SQR.B1, SQR.C1, SQR.D1,
@@ -166,6 +167,8 @@ function generateMove(player){
         pieces = BOARD_DEF.bPieces;
     }
 
+    let hasCaptureMove = false;
+
     for(let i=0; i<pieceCount; i++){
         let moves = moveCount(player, pieces[i]);
         let m = {piece: pieces[i], moves: [], captures: []};
@@ -175,45 +178,47 @@ function generateMove(player){
         let move3 = pieces[i] + moves[2];
         let move4 = pieces[i] + moves[3];
 
-        if(BOARD_DEF.board[move1] == PIECE_TYPE.NO_PIECE && !inOffset(move1)){
-            m.moves.push(pieces[i] + moves[0]);
-        }
-        if(BOARD_DEF.board[move2] == PIECE_TYPE.NO_PIECE && !inOffset(move2)){
-            m.moves.push(pieces[i] + moves[1]);
-        }
-        if(BOARD_DEF.board[move1] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move1] && !inOffset(move1)){
-            let moveTemp = moveCount(player, move1);
+        hasCaptureMove = checkCaptureMoves(m, move1, player, 0) ? true : hasCaptureMove;
+        hasCaptureMove = checkCaptureMoves(m, move2, player, 1) ? true : hasCaptureMove;
+        hasCaptureMove = checkCaptureMoves(m, move3, player, 2) ? true : hasCaptureMove;
+        hasCaptureMove = checkCaptureMoves(m, move4, player, 3) ? true : hasCaptureMove;
 
-            if(BOARD_DEF.board[move1 + moveTemp[0]] == PIECE_TYPE.NO_PIECE  && !inOffset(move1 + moveTemp[0])){
-                m.captures.push({to: move1 + moveTemp[0], remove: move1});
-            }
-        }
-        if(BOARD_DEF.board[move2] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move2] && !inOffset(move2)){
-            let moveTemp = moveCount(player, move2);
-
-            if(BOARD_DEF.board[move2 + moveTemp[1]] == PIECE_TYPE.NO_PIECE  && !inOffset(move2 + moveTemp[1])){
-                m.captures.push({to: move2 + moveTemp[1], remove: move2});
-            }
-        }
-        if(BOARD_DEF.board[move3] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move3] && !inOffset(move3)){
-            let moveTemp = moveCount(player, move3);
-
-            if(BOARD_DEF.board[move3 + moveTemp[2]] == PIECE_TYPE.NO_PIECE  && !inOffset(move3 + moveTemp[2])){
-                m.captures.push({to: move3 + moveTemp[2], remove: move3});
-            }
-        }
-        if(BOARD_DEF.board[move4] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move4] && !inOffset(move4)){
-            let moveTemp = moveCount(player, move4);
-
-            if(BOARD_DEF.board[move4 + moveTemp[3]] == PIECE_TYPE.NO_PIECE  && !inOffset(move4 + moveTemp[3])){
-                m.captures.push({to: move4 + moveTemp[3], remove: move4});
-            }
-        }
-
-        if(m.moves.length > 0 || m.captures.length > 0)
+        if(m.captures.length > 0)
             possibleMoves.push(m)
     }
+
+    if(!hasCaptureMove){
+        for(let i=0; i<pieceCount; i++){
+            let moves = moveCount(player, pieces[i]);
+            let m = {piece: pieces[i], moves: [], captures: []};
+            let move1 = pieces[i] + moves[0];
+            let move2 = pieces[i] + moves[1];
+
+            if(BOARD_DEF.board[move1] == PIECE_TYPE.NO_PIECE && !inOffset(move1)){
+                m.moves.push(pieces[i] + moves[0]);
+            }
+            if(BOARD_DEF.board[move2] == PIECE_TYPE.NO_PIECE && !inOffset(move2)){
+                m.moves.push(pieces[i] + moves[1]);
+            }
+
+            if(m.moves.length > 0)
+                possibleMoves.push(m)
+        }
+    }
+    console.log(possibleMoves)
     return possibleMoves;
+}
+
+function checkCaptureMoves(m, move, player, tmove){
+    if(BOARD_DEF.board[move] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move] && !inOffset(move)){
+        let moveTemp = moveCount(player, move);
+
+        if(BOARD_DEF.board[move + moveTemp[tmove]] == PIECE_TYPE.NO_PIECE  && !inOffset(move + moveTemp[tmove])){
+            m.captures.push({to: move + moveTemp[tmove], remove: move});
+            return true;
+        }
+    }
+    return false;
 }
 
 function moveCount(player, sqr){
