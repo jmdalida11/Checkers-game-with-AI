@@ -1,4 +1,4 @@
-var DEBUG = false;
+var DEBUG = true;
 
 const imgs = [null, new Image(), new Image()];
 imgs[1].src = 'r.png';
@@ -172,6 +172,8 @@ function generateMove(player){
 
         let move1 = pieces[i] + moves[0];
         let move2 = pieces[i] + moves[1];
+        let move3 = pieces[i] + moves[2];
+        let move4 = pieces[i] + moves[3];
 
         if(BOARD_DEF.board[move1] == PIECE_TYPE.NO_PIECE && !inOffset(move1)){
             m.moves.push(pieces[i] + moves[0]);
@@ -193,6 +195,20 @@ function generateMove(player){
                 m.captures.push({to: move2 + moveTemp[1], remove: move2});
             }
         }
+        if(BOARD_DEF.board[move3] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move3] && !inOffset(move3)){
+            let moveTemp = moveCount(player, move3);
+
+            if(BOARD_DEF.board[move3 + moveTemp[2]] == PIECE_TYPE.NO_PIECE  && !inOffset(move3 + moveTemp[2])){
+                m.captures.push({to: move3 + moveTemp[2], remove: move3});
+            }
+        }
+        if(BOARD_DEF.board[move4] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move4] && !inOffset(move4)){
+            let moveTemp = moveCount(player, move4);
+
+            if(BOARD_DEF.board[move4 + moveTemp[3]] == PIECE_TYPE.NO_PIECE  && !inOffset(move4 + moveTemp[3])){
+                m.captures.push({to: move4 + moveTemp[3], remove: move4});
+            }
+        }
 
         if(m.moves.length > 0 || m.captures.length > 0)
             possibleMoves.push(m)
@@ -203,17 +219,17 @@ function generateMove(player){
 function moveCount(player, sqr){
     if(player == PLAYER.P1){
         if(EVEN_RANK_SQR.includes(sqr)){
-            return [5, 6];
+            return [5, 6, -6, -7];
         }else if(ODD_RANK_SQR.includes(sqr)){
-            return [6, 7];
+            return [6, 7, -5, -6];
         }
     }
     else if(player == PLAYER.P2)
     {
         if(EVEN_RANK_SQR.includes(sqr)){
-            return [-6, -7];
+            return [-6, -7, 5, 6];
         }else if(ODD_RANK_SQR.includes(sqr)){
-            return [-5, -6];
+            return [-5, -6, 6, 7];
         }
     }
     return [0,0];
