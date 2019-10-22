@@ -114,14 +114,17 @@ function movePiece(src, target, tiles){
                     if(target == capture.to){
                         removePiece(capture.remove);
                         insertPiece(src, target);
-                        switchPlayer();
-                        let x;
-                        for(let t of tiles){
+
+                        if(!hasMultipleCapture(target)){
+                            switchPlayer();
+                        }
+
+                        for(var t of tiles){
                             if (t.sqr == capture.remove){
-                                x = t;
+                                break;
                             }
                         }
-                        return [true, MOVE_TYPE.MOVE_CAPTURE, x];
+                        return [true, MOVE_TYPE.MOVE_CAPTURE, t];
                     }
                 }
             }
@@ -152,6 +155,20 @@ function insertPiece(src, target){
 function switchPlayer(){
     BOARD_DEF.move = BOARD_DEF.move == PLAYER.P1 ? PLAYER.P2 : PLAYER.P1;
     BOARD_DEF.availableMoves = generateMove(BOARD_DEF.move);
+}
+
+function hasMultipleCapture(target){
+
+    let moves = generateMove(BOARD_DEF.move);
+
+    for(let move of moves){
+        if(move.captures.length > 0 && move.piece == target){
+            BOARD_DEF.availableMoves = moves;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function generateMove(player){
