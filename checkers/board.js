@@ -78,7 +78,7 @@ const MOVE_TYPE = {
     MOVE_CAPTURE : 1
 };
 
-const SUPER_SQR = [0, [SQR.A8, SQR.B8, SQR.C8, SQR.D8], [SQR.A1, SQR.B1, SQR.C1, SQR.D1]];
+const SUPER_SQR = [[SQR.A8, SQR.B8, SQR.C8, SQR.D8], [SQR.A1, SQR.B1, SQR.C1, SQR.D1]];
 
 function frToSqr(f, r){
     return (7 + f) + (r * 6);
@@ -111,7 +111,7 @@ function movePiece(src, target, tiles){
         for(let m of BOARD_DEF.availableMoves){
             if(m.piece == src && m.moves.includes(target)){
                 insertPiece(src, target);
-                switchPlayer();
+                switchPlayer(tiles);
                 return [true, MOVE_TYPE.MOVE_NORMAL];
             }else if(m.piece == src && m.captures.length > 0){
                 for(let capture of m.captures){
@@ -120,7 +120,7 @@ function movePiece(src, target, tiles){
                         insertPiece(src, target);
 
                         if(!hasMultipleCapture(target)){
-                            switchPlayer();
+                            switchPlayer(tiles);
                         }
 
                         for(var t of tiles){
@@ -153,29 +153,46 @@ function insertPiece(src, target){
         BOARD_DEF.rPieces[BOARD_DEF.rPieces.indexOf(src)] = target;
     }else if(PIECE_TYPE.YELLOW_PIECE == BOARD_DEF.board[target]){
         BOARD_DEF.yPieces[BOARD_DEF.yPieces.indexOf(src)] = target;
+    }else if(PIECE_TYPE.SUPER_RED == BOARD_DEF.board[target]){
+        BOARD_DEF.rPieces[BOARD_DEF.rPieces.indexOf(src)] = target;
+    }else if(PIECE_TYPE.SUPER_YELLOW == BOARD_DEF.board[target]){
+        BOARD_DEF.yPieces[BOARD_DEF.yPieces.indexOf(src)] = target;
     }
 }
 
-function switchPlayer(){
-
-    let p;
-    let king;
-
-    if(BOARD_DEF.move == PLAYER.P1){
-        p = BOARD_DEF.rPieces;
-        king = PIECE_TYPE.SUPER_RED;
-    }else{
-        p = BOARD_DEF.yPieces;
-        king = PIECE_TYPE.SUPER_YELLOW;
-    }
-
-    for(let i=0; i<p.length; i++)
-    {
-        if(SUPER_SQR[BOARD_DEF.move].includes(p[i])){
-            BOARD_DEF.board[p[i]] = king;
+function upgradePiece(tiles){
+    for(let i=0; i<BOARD_DEF.rPieces.length; i++){
+        if(SUPER_SQR[0].includes(BOARD_DEF.rPieces[i])){
+            BOARD_DEF.board[BOARD_DEF.rPieces[i]] = PIECE_TYPE.SUPER_RED;
+            for(let tile of tiles){
+                if(tile.sqr == BOARD_DEF.rPieces[i]){
+                    if(tile.piece != null){
+                        tile.piece.pieceType = PIECE_TYPE.SUPER_RED;
+                        break;
+                    }
+                }
+            }
         }
     }
 
+    for(let i=0; i<BOARD_DEF.yPieces.length; i++){
+        if(SUPER_SQR[1].includes(BOARD_DEF.yPieces[i])){
+            BOARD_DEF.board[BOARD_DEF.yPieces[i]] = PIECE_TYPE.SUPER_YELLOW;
+            for(let tile of tiles){
+                if(tile.sqr == BOARD_DEF.yPiece[i]){
+                    if(tile.piece != null){
+                        tile.piece.pieceType = PIECE_TYPE.SUPER_YELLOW;
+                        break;
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+
+function switchPlayer(tiles){
     BOARD_DEF.move = BOARD_DEF.move == PLAYER.P1 ? PLAYER.P2 : PLAYER.P1;
     BOARD_DEF.availableMoves = generateMove(BOARD_DEF.move);
 }
@@ -234,6 +251,12 @@ function generateMove(player){
             let move1 = pieces[i] + moves[0];
             let move2 = pieces[i] + moves[1];
 
+            if(BOARD_DEF.board[pieces[i]] == PIECE_TYPE.SUPER_RED || BOARD_DEF.board[pieces[i]] == PIECE_TYPE.SUPER_YELLOW){
+                superPieceMove(m, pieces[i]);
+                if(m.moves.length > 0) possibleMoves.push(m);
+                continue;
+            }
+
             if(BOARD_DEF.board[move1] == PIECE_TYPE.NO_PIECE && !inOffset(move1)){
                 m.moves.push(pieces[i] + moves[0]);
             }
@@ -241,16 +264,56 @@ function generateMove(player){
                 m.moves.push(pieces[i] + moves[1]);
             }
 
-            if(m.moves.length > 0)
-                possibleMoves.push(m)
+            if(m.moves.length > 0) possibleMoves.push(m);
         }
     }
     return possibleMoves;
 }
 
+function superPieceMove(piece, sqr){
+
+    let mUpRight = sqr + sqrPieceEvenOrOdd(sqr)[0];
+    let mUpLeft = sqr + sqrPieceEvenOrOdd(sqr)[1];
+    let mDownLeft= sqr +  sqrPieceEvenOrOdd(sqr)[2];
+    let mDownRight = sqr +  sqrPieceEvenOrOdd(sqr)[3];
+
+    while(BOARD_DEF.board[mUpRight] == PIECE_TYPE.NO_PIECE && !inOffset(mUpRight)){
+        piece.moves.push(mUpRight);
+        mUpRight += sqrPieceEvenOrOdd(mUpRight)[0];
+    }
+
+    while(BOARD_DEF.board[mUpLeft] == PIECE_TYPE.NO_PIECE && !inOffset(mUpLeft)){
+        piece.moves.push(mUpLeft);
+        mUpLeft += sqrPieceEvenOrOdd(mUpLeft)[1];
+    }
+
+    while(BOARD_DEF.board[mDownLeft] == PIECE_TYPE.NO_PIECE && !inOffset(mDownLeft)){
+        piece.moves.push(mDownLeft);
+        mDownLeft += sqrPieceEvenOrOdd(mDownLeft)[2];
+    }
+
+    while(BOARD_DEF.board[mDownRight] == PIECE_TYPE.NO_PIECE && !inOffset(mDownRight)){
+        piece.moves.push(mDownRight);
+        mDownRight += sqrPieceEvenOrOdd(mDownRight)[3];
+    }
+
+}
+
+function sqrPieceEvenOrOdd(sqr){
+    if(EVEN_RANK_SQR.includes(sqr))
+        return [-6, -7, 5, 6];
+
+    return[-5, -6, 6, 7];
+}
+
 function checkCaptureMoves(m, move, player, tmove){
     if(BOARD_DEF.board[move] != PIECE_TYPE.NO_PIECE && player != BOARD_DEF.board[move] && !inOffset(move)){
         let moveTemp = moveCount(player, move);
+
+        let sPieceType = player == PLAYER.P1 ? PIECE_TYPE.SUPER_RED : PIECE_TYPE.SUPER_YELLOW;
+
+        if(BOARD_DEF.board[move] == sPieceType)
+            return false;
 
         if(BOARD_DEF.board[move + moveTemp[tmove]] == PIECE_TYPE.NO_PIECE  && !inOffset(move + moveTemp[tmove])){
             m.captures.push({to: move + moveTemp[tmove], remove: move});

@@ -49,7 +49,6 @@ function draw(){
     for(let i=0; i<tiles.length; i++){
         tiles[i].drawPiece(context);
     }
-
 }
 
 function collide( source, target ) {
@@ -82,6 +81,7 @@ canvas.onmouseup = function(e){
                     tiles[i].piece.size = tiles[i].size;
                     piecemoving.piece = null;
                     piecemoving = null;
+                    upgradePiece(tiles);
                     break;
                 }
                 case MOVE_TYPE.MOVE_CAPTURE:
@@ -95,6 +95,7 @@ canvas.onmouseup = function(e){
 
                     piecemoving.piece = null;
                     piecemoving = null;
+                    upgradePiece(tiles);
                     break;
                 }
             }
@@ -117,7 +118,14 @@ canvas.onmousedown =  function(e){
 
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
-        if(collide(mp, t) && tiles[i].piece != null && tiles[i].sqr != SQR.NONE && BOARD_DEF.move == tiles[i].piece.pieceType){
+        if(collide(mp, t) && tiles[i].piece != null && tiles[i].sqr != SQR.NONE){
+
+            let pTypeSuper = tiles[i].piece.pieceType == PIECE_TYPE.SUPER_RED ? PLAYER.P1 : PLAYER.P2;
+
+            if(BOARD_DEF.move != tiles[i].piece.pieceType){
+                if(pTypeSuper != BOARD_DEF.move)
+                    break;
+            }
 
             for(let moves of BOARD_DEF.availableMoves){
                 if(tiles[i].sqr == moves.piece){
