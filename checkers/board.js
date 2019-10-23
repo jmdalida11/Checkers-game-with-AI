@@ -1,17 +1,19 @@
 var DEBUG = false;
 
-const imgs = [null, new Image(), new Image()];
+const imgs = [null, new Image(), new Image(), new Image(), new Image()];
 imgs[1].src = 'r.png';
 imgs[2].src = 'y.png';
+imgs[3].src = 'r_super.png';
+imgs[4].src = 'y_super.png';
 
 const PLAYER = {P1: 1, P2: 2};
 
 const PIECE_TYPE = {
     NO_PIECE: 0,
-    WHITE_PIECE: 1,
-    BLACK_PIECE: 2,
-    WHITE_SUPER_PIECE: 3,
-    BLACK_SUPER_PIECE: 4
+    RED_PIECE: 1,
+    YELLOW_PIECE: 2,
+    SUPER_RED: 3,
+    SUPER_YELLOW: 4
 };
 
 const SQR = {
@@ -59,13 +61,13 @@ const sqr48 = [];
 BOARD_DEF.board = new Array(BOARD_SIZE);
 BOARD_DEF.move = PLAYER.P2;
 
-BOARD_DEF.wPieces = [
+BOARD_DEF.rPieces = [
     SQR.A1, SQR.B1, SQR.C1, SQR.D1,
     SQR.A2, SQR.B2, SQR.C2, SQR.D2,
     SQR.A3, SQR.B3, SQR.C3, SQR.D3
 ];
 
-BOARD_DEF.bPieces = [
+BOARD_DEF.yPieces = [
     SQR.A8, SQR.B8, SQR.C8, SQR.D8,
     SQR.A7, SQR.B7, SQR.C7, SQR.D7,
     SQR.A6, SQR.B6, SQR.C6, SQR.D6
@@ -75,6 +77,8 @@ const MOVE_TYPE = {
     MOVE_NORMAL : 0,
     MOVE_CAPTURE : 1
 };
+
+const SUPER_SQR = [0, [SQR.A8, SQR.B8, SQR.C8, SQR.D8], [SQR.A1, SQR.B1, SQR.C1, SQR.D1]];
 
 function frToSqr(f, r){
     return (7 + f) + (r * 6);
@@ -92,12 +96,12 @@ function initBoard(){
     }
 
     Object.keys(SQR).forEach(function(key) {
-        if(hasPieceAt(BOARD_DEF.wPieces, SQR[key])){
-            BOARD_DEF.board[SQR[key]] = PIECE_TYPE.WHITE_PIECE;
+        if(hasPieceAt(BOARD_DEF.rPieces, SQR[key])){
+            BOARD_DEF.board[SQR[key]] = PIECE_TYPE.RED_PIECE;
 
         }
-        if(hasPieceAt(BOARD_DEF.bPieces, SQR[key])){
-            BOARD_DEF.board[SQR[key]] = PIECE_TYPE.BLACK_PIECE;
+        if(hasPieceAt(BOARD_DEF.yPieces, SQR[key])){
+            BOARD_DEF.board[SQR[key]] = PIECE_TYPE.YELLOW_PIECE;
         }
     });
 }
@@ -135,9 +139,9 @@ function movePiece(src, target, tiles){
 
 function removePiece(sqr){
     if(BOARD_DEF.board[sqr] == PLAYER.P1){
-        BOARD_DEF.wPieces.splice(BOARD_DEF.wPieces.indexOf(sqr), 1);
+        BOARD_DEF.rPieces.splice(BOARD_DEF.rPieces.indexOf(sqr), 1);
     }else if(BOARD_DEF.board[sqr] == PLAYER.P2){
-        BOARD_DEF.bPieces.splice(BOARD_DEF.bPieces.indexOf(sqr),1);
+        BOARD_DEF.yPieces.splice(BOARD_DEF.yPieces.indexOf(sqr),1);
     }
     BOARD_DEF.board[sqr] = PIECE_TYPE.NO_PIECE;
 }
@@ -145,14 +149,33 @@ function removePiece(sqr){
 function insertPiece(src, target){
     BOARD_DEF.board[target] = BOARD_DEF.board[src];
     BOARD_DEF.board[src] = PIECE_TYPE.NO_PIECE;
-    if(PIECE_TYPE.WHITE_PIECE == BOARD_DEF.board[target]){
-        BOARD_DEF.wPieces[BOARD_DEF.wPieces.indexOf(src)] = target;
-    }else if(PIECE_TYPE.BLACK_PIECE == BOARD_DEF.board[target]){
-        BOARD_DEF.bPieces[BOARD_DEF.bPieces.indexOf(src)] = target;
+    if(PIECE_TYPE.RED_PIECE == BOARD_DEF.board[target]){
+        BOARD_DEF.rPieces[BOARD_DEF.rPieces.indexOf(src)] = target;
+    }else if(PIECE_TYPE.YELLOW_PIECE == BOARD_DEF.board[target]){
+        BOARD_DEF.yPieces[BOARD_DEF.yPieces.indexOf(src)] = target;
     }
 }
 
 function switchPlayer(){
+
+    let p;
+    let king;
+
+    if(BOARD_DEF.move == PLAYER.P1){
+        p = BOARD_DEF.rPieces;
+        king = PIECE_TYPE.SUPER_RED;
+    }else{
+        p = BOARD_DEF.yPieces;
+        king = PIECE_TYPE.SUPER_YELLOW;
+    }
+
+    for(let i=0; i<p.length; i++)
+    {
+        if(SUPER_SQR[BOARD_DEF.move].includes(p[i])){
+            BOARD_DEF.board[p[i]] = king;
+        }
+    }
+
     BOARD_DEF.move = BOARD_DEF.move == PLAYER.P1 ? PLAYER.P2 : PLAYER.P1;
     BOARD_DEF.availableMoves = generateMove(BOARD_DEF.move);
 }
@@ -177,11 +200,11 @@ function generateMove(player){
     let pieces = [];
 
     if(player == PLAYER.P1){
-        pieceCount = BOARD_DEF.wPieces.length;
-        pieces = BOARD_DEF.wPieces;
+        pieceCount = BOARD_DEF.rPieces.length;
+        pieces = BOARD_DEF.rPieces;
     }else if(player == PLAYER.P2){
-        pieceCount = BOARD_DEF.bPieces.length;
-        pieces = BOARD_DEF.bPieces;
+        pieceCount = BOARD_DEF.yPieces.length;
+        pieces = BOARD_DEF.yPieces;
     }
 
     let hasCaptureMove = false;
@@ -222,7 +245,6 @@ function generateMove(player){
                 possibleMoves.push(m)
         }
     }
-    console.log(possibleMoves)
     return possibleMoves;
 }
 
