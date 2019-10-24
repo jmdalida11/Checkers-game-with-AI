@@ -179,7 +179,7 @@ function upgradePiece(tiles){
         if(SUPER_SQR[1].includes(BOARD_DEF.yPieces[i])){
             BOARD_DEF.board[BOARD_DEF.yPieces[i]] = PIECE_TYPE.SUPER_YELLOW;
             for(let tile of tiles){
-                if(tile.sqr == BOARD_DEF.yPiece[i]){
+                if(tile.sqr == BOARD_DEF.yPieces[i]){
                     if(tile.piece != null){
                         tile.piece.pieceType = PIECE_TYPE.SUPER_YELLOW;
                         break;
@@ -190,7 +190,6 @@ function upgradePiece(tiles){
         }
     }
 }
-
 
 function switchPlayer(tiles){
     BOARD_DEF.move = BOARD_DEF.move == PLAYER.P1 ? PLAYER.P2 : PLAYER.P1;
@@ -268,6 +267,10 @@ function generateMove(player){
         }
     }
     return possibleMoves;
+}
+
+function superPieceCapture(piece, sqr){
+
 }
 
 function superPieceMove(piece, sqr){
