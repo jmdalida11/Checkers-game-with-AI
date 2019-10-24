@@ -234,10 +234,20 @@ function generateMove(player){
         let move3 = pieces[i] + moves[2];
         let move4 = pieces[i] + moves[3];
 
-        hasCaptureMove = checkCaptureMoves(m, move1, player, 0) ? true : hasCaptureMove;
-        hasCaptureMove = checkCaptureMoves(m, move2, player, 1) ? true : hasCaptureMove;
-        hasCaptureMove = checkCaptureMoves(m, move3, player, 2) ? true : hasCaptureMove;
-        hasCaptureMove = checkCaptureMoves(m, move4, player, 3) ? true : hasCaptureMove;
+        let superCap = false;
+        if (BOARD_DEF.board[pieces[i]] == PIECE_TYPE.SUPER_YELLOW || BOARD_DEF.board[pieces[i]] == PIECE_TYPE.SUPER_RED)
+        {
+            superCap = superPieceCapture(m, pieces[i]);
+            hasCaptureMove = true;
+        }
+
+
+        if(!superCap){
+            hasCaptureMove = checkCaptureMoves(m, move1, player, 0) ? true : hasCaptureMove;
+            hasCaptureMove = checkCaptureMoves(m, move2, player, 1) ? true : hasCaptureMove;
+            hasCaptureMove = checkCaptureMoves(m, move3, player, 2) ? true : hasCaptureMove;
+            hasCaptureMove = checkCaptureMoves(m, move4, player, 3) ? true : hasCaptureMove;
+        }
 
         if(m.captures.length > 0)
             possibleMoves.push(m)
@@ -270,7 +280,43 @@ function generateMove(player){
 }
 
 function superPieceCapture(piece, sqr){
+    let mUpRight = sqr + sqrPieceEvenOrOdd(sqr)[0];
+    let mUpLeft = sqr + sqrPieceEvenOrOdd(sqr)[1];
+    let mDownLeft= sqr +  sqrPieceEvenOrOdd(sqr)[2];
+    let mDownRight = sqr +  sqrPieceEvenOrOdd(sqr)[3];
 
+    let hasCap = false;
+    hasCap = sPieceCap(mUpRight, 0, piece) ? true : hasCap;
+    hasCap = sPieceCap(mUpLeft, 1, piece) ? true : hasCap;
+    hasCap = sPieceCap(mDownLeft, 2, piece) ? true : hasCap;
+    hasCap = sPieceCap(mDownRight, 3, piece) ? true : hasCap;
+
+    return hasCap;
+}
+
+function sPieceCap(direct, i, piece){
+    let hasCap = false;
+    while(!inOffset(direct)){
+        if(BOARD_DEF.board[direct] != PIECE_TYPE.NO_PIECE){
+            let sPieceType = BOARD_DEF.move == PLAYER.P1 ? PIECE_TYPE.SUPER_RED : PIECE_TYPE.SUPER_YELLOW;
+
+            if(BOARD_DEF.board[direct] == BOARD_DEF.move || BOARD_DEF.board[direct] == sPieceType) break;
+
+            let toRemove = direct;
+
+            direct += sqrPieceEvenOrOdd(direct)[i];
+            if(BOARD_DEF.board[direct] == PIECE_TYPE.NO_PIECE && !inOffset(direct)){
+                piece.captures.push({to: direct, remove: toRemove});
+                hasCap = true;
+            }
+
+            break;
+
+        }
+        direct += sqrPieceEvenOrOdd(direct)[i];
+    }
+
+    return hasCap;
 }
 
 function superPieceMove(piece, sqr){
