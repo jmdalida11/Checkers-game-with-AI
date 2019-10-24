@@ -141,8 +141,13 @@ function removePiece(sqr){
     if(BOARD_DEF.board[sqr] == PLAYER.P1){
         BOARD_DEF.rPieces.splice(BOARD_DEF.rPieces.indexOf(sqr), 1);
     }else if(BOARD_DEF.board[sqr] == PLAYER.P2){
-        BOARD_DEF.yPieces.splice(BOARD_DEF.yPieces.indexOf(sqr),1);
+        BOARD_DEF.yPieces.splice(BOARD_DEF.yPieces.indexOf(sqr), 1);
+    }else if(PIECE_TYPE.SUPER_RED == BOARD_DEF.board[sqr]){
+        BOARD_DEF.rPieces.splice(BOARD_DEF.rPieces.indexOf(sqr), 1);
+    }else if(PIECE_TYPE.SUPER_YELLOW == BOARD_DEF.board[sqr]){
+        BOARD_DEF.yPieces.splice(BOARD_DEF.yPieces.indexOf(sqr), 1);
     }
+
     BOARD_DEF.board[sqr] = PIECE_TYPE.NO_PIECE;
 }
 
@@ -238,7 +243,7 @@ function generateMove(player){
         if (BOARD_DEF.board[pieces[i]] == PIECE_TYPE.SUPER_YELLOW || BOARD_DEF.board[pieces[i]] == PIECE_TYPE.SUPER_RED)
         {
             superCap = superPieceCapture(m, pieces[i]);
-            hasCaptureMove = true;
+            hasCaptureMove = superCap;
         }
 
 
