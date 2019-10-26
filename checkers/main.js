@@ -14,7 +14,6 @@ const tiles = [];
 let moving = false;
 let mousepos = 0;
 let piecemoving = null;
-let moveAi = false;
 
 function init(){
 
@@ -77,7 +76,6 @@ canvas.onmouseup = function(e){
             if(move == null) return;
             if(!updatePiecesPos(piecemoving, move, i, BOARD_DEF)) break;
             donePlayerMove = true;
-            moveAi = true;
             break;
         }
     }
@@ -201,6 +199,7 @@ if(DEBUG){
 }
 
 let counterAlert = 0;
+let aiMoveCounter = 0;
 let stopLoop = false;
 
 function loop() {
@@ -209,10 +208,14 @@ function loop() {
         zz.innerHTML = printBoard();
     }
 
-    if(withAI && moveAi){
-        while(BOARD_DEF.move == AI && BOARD_DEF.availableMoves.length > 0) aiMove(BOARD_DEF);
-
-        moveAi = false;
+    if(withAI && BOARD_DEF.move == AI){
+        aiMoveCounter++;
+        if(aiMoveCounter > 20){
+            if(BOARD_DEF.availableMoves.length > 0) {
+                aiMove(BOARD_DEF);
+                aiMoveCounter = 0;
+            }
+        }
     }
 
     draw();
