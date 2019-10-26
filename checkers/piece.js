@@ -18,6 +18,6 @@ class Piece{
     }
 
     move(src, target, tiles){
-        return movePiece(src, target, tiles);
+        return movePiece(src, target, BOARD_DEF);
     }
 }

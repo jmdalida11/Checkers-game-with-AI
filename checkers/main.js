@@ -36,7 +36,6 @@ function init(){
         }
         colorblack = !colorblack;
     }
-
 }
 
 function draw(){
@@ -64,41 +63,16 @@ canvas.onmouseup = function(e){
     moving = false;
     let mp = getPos(canvas, e);
 
+    if(BOARD_DEF.move == AI && withAI){
+        return;
+    }
+
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
         if(collide(mp, t) && piecemoving != null && tiles[i] != piecemoving && tiles[i].sqr != SQR.NONE){
-            let move = piecemoving.piece.move(piecemoving.sqr, tiles[i].sqr, tiles);
+            let move = piecemoving.piece.move(piecemoving.sqr, tiles[i].sqr);
 
-            if(!move[0]) break;
-
-            switch(move[1])
-            {
-                case MOVE_TYPE.MOVE_NORMAL:
-                {
-                    tiles[i].piece = piecemoving.piece;
-                    tiles[i].piece.x = tiles[i].x;
-                    tiles[i].piece.y = tiles[i].y;
-                    tiles[i].piece.size = tiles[i].size;
-                    piecemoving.piece = null;
-                    piecemoving = null;
-                    upgradePiece(tiles);
-                    break;
-                }
-                case MOVE_TYPE.MOVE_CAPTURE:
-                {
-                    tiles[i].piece = piecemoving.piece;
-                    tiles[i].piece.x = tiles[i].x;
-                    tiles[i].piece.y = tiles[i].y;
-                    tiles[i].piece.size = tiles[i].size;
-
-                    move[2].piece = null;
-
-                    piecemoving.piece = null;
-                    piecemoving = null;
-                    upgradePiece(tiles);
-                    break;
-                }
-            }
+            if(!updatePiecesPos(piecemoving, move, i, BOARD_DEF)) break;
 
             return;
         }
@@ -113,7 +87,67 @@ canvas.onmouseup = function(e){
 
 }
 
+function updatePiecesPos(piecemoving, move, i, bf){
+    if(!move[0]) return false;
+
+    switch(move[1])
+    {
+        case MOVE_TYPE.MOVE_NORMAL:
+        {
+            tiles[i].piece = piecemoving.piece;
+            tiles[i].piece.x = tiles[i].x;
+            tiles[i].piece.y = tiles[i].y;
+            tiles[i].piece.size = tiles[i].size;
+            piecemoving.piece = null;
+            piecemoving = null;
+
+            updateSuperPiece(bf.rPieces, PIECE_TYPE.SUPER_RED);
+            updateSuperPiece(bf.yPieces, PIECE_TYPE.SUPER_YELLOW);
+
+            break;
+        }
+        case MOVE_TYPE.MOVE_CAPTURE:
+        {
+            tiles[i].piece = piecemoving.piece;
+            tiles[i].piece.x = tiles[i].x;
+            tiles[i].piece.y = tiles[i].y;
+            tiles[i].piece.size = tiles[i].size;
+
+            for(let toRemove of tiles){
+                if (toRemove.sqr == move[2]){
+                    toRemove.piece = null;
+                    break;
+                }
+            }
+
+            piecemoving.piece = null;
+            piecemoving = null;
+
+            updateSuperPiece(bf.rPieces, PIECE_TYPE.SUPER_RED);
+            updateSuperPiece(bf.yPieces, PIECE_TYPE.SUPER_YELLOW);
+        }
+    }
+
+    return true;
+}
+
+function updateSuperPiece(piecePos, pieceType){
+    for(let tile of tiles){
+        for(let rP of piecePos){
+            if(BOARD_DEF.board[rP] == pieceType && tile.sqr == rP){
+                tile.piece.pieceType = pieceType;
+                break;
+            }
+        }
+    }
+}
+
 canvas.onmousedown =  function(e){
+
+    if(BOARD_DEF.move == AI && withAI){
+        return;
+    }
+
     let mp = getPos(canvas, e);
 
     for(let i=0; i<tiles.length; i++){
@@ -154,9 +188,8 @@ function getPos(c, e){
     return {x:e.clientX - rect.left, y: e.clientY - rect.top, h: 1, w:1};
 }
 
-initBoard();
+initBoard(BOARD_DEF);
 init();
-BOARD_DEF.availableMoves = generateMove(BOARD_DEF.move);
 
 if(DEBUG){
     var zz = document.createElement('div');
