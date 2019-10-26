@@ -1,13 +1,15 @@
 var AI = PLAYER.P1;
 
+let AI_LVL = 6;
+
 function aiMove(bf){
 
     let bb = tempBfClone(bf);
 
-    if(bf.availableMoves.length == 0) return;
+    if(bf.availableMoves.length == 0 || bf.move != AI)return;
 
-    let depth = 10;
-    let move = minmax(bb, depth, AI)[0];
+    let depth = AI_LVL * 2;
+    let move = minmax(bb, depth, -Infinity, Infinity, AI)[0];
 
     let verdict;
     if(move.capture){
@@ -34,9 +36,9 @@ function aiMove(bf){
 
 }
 
-function minmax(bf, depth, turn){
+function minmax(bf, depth, alpha, beta, turn){
 
-    if (depth <= 0) return evaluatePosition(bf, turn);
+    if (depth <= 0 || bf.availableMoves <= 0) return evaluatePosition(bf);
 
     if(turn == AI){
 
@@ -58,13 +60,19 @@ function minmax(bf, depth, turn){
             for(let move of moves){
 
                 createNewNode(bf, pieceMove.piece, move, isCapture);
-                let value = minmax(bf, --depth, bf.move)[1];
+                let value = minmax(bf, --depth, alpha, beta, bf.move)[1];
 
                 if (value > bestScore){
                     bestScore = value;
                     bestMove = {src: pieceMove.piece, target: move, capture: isCapture};
                 }
+
+                alpha = Math.max(alpha, value);
+
                 bf = tempBf;
+
+                if(alpha >= beta) break;
+
             }
         }
 
@@ -91,14 +99,18 @@ function minmax(bf, depth, turn){
             for(let move of moves){
 
                 createNewNode(bf, pieceMove.piece, move, isCapture);
-                let value = minmax(bf, --depth, bf.move)[1];
+                let value = minmax(bf, --depth, alpha, beta, bf.move)[1];
 
                 if (value < bestScore){
                     bestScore = value;
                     bestMove = {src: pieceMove.piece, target: move, capture: isCapture};
                 }
 
+                beta = Math.min(beta, value);
+
                 bf = tempBf;
+
+                if(alpha >= beta) break;
             }
         }
 
@@ -115,7 +127,7 @@ function createNewNode(bf, src, target, isCapture){
     }
 }
 
-function evaluatePosition(bf, turn){
+function evaluatePosition(bf){
 
     let rPieceSum = 0;
     let yPieceSum = 0;
@@ -136,7 +148,7 @@ function evaluatePosition(bf, turn){
         }
     }
 
-    let eval = turn == PLAYER.P1 ? rPieceSum - yPieceSum : yPieceSum - rPieceSum;
+    let eval =  rPieceSum - yPieceSum;
     return [null, eval];
 }
 

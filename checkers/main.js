@@ -14,6 +14,7 @@ const tiles = [];
 let moving = false;
 let mousepos = 0;
 let piecemoving = null;
+let moveAi = false;
 
 function init(){
 
@@ -66,19 +67,22 @@ canvas.onmouseup = function(e){
     if(BOARD_DEF.move == AI && withAI){
         return;
     }
-
+    let donePlayerMove = false;
     for(let i=0; i<tiles.length; i++){
         let t = {x: tiles[i].x, y: tiles[i].y, w: tiles[i].size, h: tiles[i].size};
         if(collide(mp, t) && piecemoving != null && tiles[i] != piecemoving && tiles[i].sqr != SQR.NONE){
+            if(piecemoving.piece == null) return;
             let move = piecemoving.piece.move(piecemoving.sqr, tiles[i].sqr);
 
+            if(move == null) return;
             if(!updatePiecesPos(piecemoving, move, i, BOARD_DEF)) break;
-
-            return;
+            donePlayerMove = true;
+            moveAi = true;
+            break;
         }
     }
 
-    if(piecemoving != null){
+    if(piecemoving != null && piecemoving.piece != null && !donePlayerMove){
         piecemoving.piece.x = piecemoving.x;
         piecemoving.piece.y = piecemoving.y;
         piecemoving.piece.size = piecemoving.size;
@@ -196,11 +200,33 @@ if(DEBUG){
     document.body.append(zz);
 }
 
-setInterval(function(){
+let counterAlert = 0;
+let stopLoop = false;
+
+function loop() {
     if(DEBUG){
         zz.innerHTML = "";
         zz.innerHTML = printBoard();
     }
 
+    if(withAI && moveAi){
+        while(BOARD_DEF.move == AI && BOARD_DEF.availableMoves.length > 0) aiMove(BOARD_DEF);
+
+        moveAi = false;
+    }
+
     draw();
-}, 1000/60);
+
+    if(BOARD_DEF.availableMoves.length <= 0){
+        counterAlert++;
+    }
+    if(counterAlert > 30){
+        let p = BOARD_DEF.move == PLAYER.P1 ? "Yellow" : "Red";
+        stopLoop = true;
+        alert(p +" player wins!");
+    }
+    if(!stopLoop)
+        requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
