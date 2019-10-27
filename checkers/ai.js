@@ -1,12 +1,12 @@
 var AI = PLAYER.P1;
 
-let AI_LVL = 10;
+let AI_LVL = 5;
 
 function aiMove(bf){
 
-    let bb = tempBfClone(bf);
-
     if(bf.availableMoves.length == 0 || bf.move != AI)return;
+
+    let bb = tempBfClone(bf);
 
     let depth = AI_LVL * 2;
     let move = minmax(bb, depth, -Infinity, Infinity, AI)[0];
@@ -39,14 +39,13 @@ function aiMove(bf){
 function minmax(bf, depth, alpha, beta, turn){
 
     if (depth <= 0 || bf.availableMoves <= 0) return evaluatePosition(bf);
-
     if(turn == AI){
 
         let bestScore = -Infinity;
         let bestMove = null;
 
         let tempBf = tempBfClone(bf);
-        for(let pieceMove of bf.availableMoves){
+        for(let pieceMove of tempBf.availableMoves){
             let moves;
             let isCapture = false;
 
@@ -59,33 +58,30 @@ function minmax(bf, depth, alpha, beta, turn){
 
             for(let move of moves){
 
-                createNewNode(bf, pieceMove.piece, move, isCapture);
-                let value = minmax(bf, --depth, alpha, beta, bf.move)[1];
+                createNewNode(tempBf, pieceMove.piece, move, isCapture);
+                let value = minmax(tempBf, depth-1, alpha, beta, tempBf.move)[1];
 
                 if (value > bestScore){
                     bestScore = value;
                     bestMove = {src: pieceMove.piece, target: move, capture: isCapture};
                 }
-
                 alpha = Math.max(alpha, value);
 
-                bf = tempBf;
+                tempBf = tempBfClone(bf);
 
                 if(alpha >= beta) break;
-
             }
+            if(alpha >= beta) break;
         }
-
         return [bestMove, bestScore];
 
     }else{
-
         let bestScore = Infinity;
         let bestMove = null;
 
         let tempBf = tempBfClone(bf);
 
-        for(let pieceMove of bf.availableMoves){
+        for(let pieceMove of tempBf.availableMoves){
             let moves;
             let isCapture = false;
 
@@ -98,22 +94,21 @@ function minmax(bf, depth, alpha, beta, turn){
 
             for(let move of moves){
 
-                createNewNode(bf, pieceMove.piece, move, isCapture);
-                let value = minmax(bf, --depth, alpha, beta, bf.move)[1];
+                createNewNode(tempBf, pieceMove.piece, move, isCapture);
+                let value = minmax(tempBf, depth-1, alpha, beta, tempBf.move)[1];
 
                 if (value < bestScore){
                     bestScore = value;
                     bestMove = {src: pieceMove.piece, target: move, capture: isCapture};
                 }
-
                 beta = Math.min(beta, value);
 
-                bf = tempBf;
+                tempBf = tempBfClone(bf);
 
                 if(alpha >= beta) break;
             }
+            if(alpha >= beta) break;
         }
-
         return [bestMove, bestScore];
 
      }
@@ -141,7 +136,7 @@ function evaluatePosition(bf){
     }
 
     for(let p of bf.yPieces){
-        if(bf.board[p] == PIECE_TYPE.SUPER_RED){
+        if(bf.board[p] == PIECE_TYPE.SUPER_YELLOW){
             yPieceSum += 3;
         }else if(bf.board[p] == PLAYER.P2){
             yPieceSum++;
