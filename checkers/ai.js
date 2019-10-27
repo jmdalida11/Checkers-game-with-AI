@@ -1,6 +1,6 @@
 var AI = PLAYER.P1;
 
-let AI_LVL = 5;
+let AI_LVL = 3;
 
 function aiMove(bf){
 

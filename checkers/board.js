@@ -192,7 +192,7 @@ function hasMultipleCapture(target, bf){
 
     for(let move of moves){
         if(move.captures.length > 0 && move.piece == target){
-            bf.availableMoves = moves;
+            bf.availableMoves = moves.filter(pp => pp.piece == target);
             return true;
         }
     }
