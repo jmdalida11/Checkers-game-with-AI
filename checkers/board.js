@@ -214,6 +214,7 @@ function generateMove(player, bf){
     }
 
     let hasCaptureMove = false;
+    let superCap = false;
 
     for(let i=0; i<pieceCount; i++){
         let moves = moveCount(player, pieces[i]);
@@ -224,20 +225,16 @@ function generateMove(player, bf){
         let move3 = pieces[i] + moves[2];
         let move4 = pieces[i] + moves[3];
 
-        let superCap = false;
         if (bf.board[pieces[i]] == PIECE_TYPE.SUPER_YELLOW || bf.board[pieces[i]] == PIECE_TYPE.SUPER_RED)
         {
             superCap = superPieceCapture(m, pieces[i], bf);
             hasCaptureMove = superCap;
         }
 
-
-        if(!superCap){
-            hasCaptureMove = checkCaptureMoves(m, move1, player, 0, bf) ? true : hasCaptureMove;
-            hasCaptureMove = checkCaptureMoves(m, move2, player, 1, bf) ? true : hasCaptureMove;
-            hasCaptureMove = checkCaptureMoves(m, move3, player, 2, bf) ? true : hasCaptureMove;
-            hasCaptureMove = checkCaptureMoves(m, move4, player, 3, bf) ? true : hasCaptureMove;
-        }
+        hasCaptureMove = checkCaptureMoves(m, move1, player, 0, bf) ? true : hasCaptureMove;
+        hasCaptureMove = checkCaptureMoves(m, move2, player, 1, bf) ? true : hasCaptureMove;
+        hasCaptureMove = checkCaptureMoves(m, move3, player, 2, bf) ? true : hasCaptureMove;
+        hasCaptureMove = checkCaptureMoves(m, move4, player, 3, bf) ? true : hasCaptureMove;
 
         if(m.captures.length > 0)
             possibleMoves.push(m)
