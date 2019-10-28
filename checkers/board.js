@@ -228,7 +228,7 @@ function generateMove(player, bf){
         if (bf.board[pieces[i]] == PIECE_TYPE.SUPER_YELLOW || bf.board[pieces[i]] == PIECE_TYPE.SUPER_RED)
         {
             superCap = superPieceCapture(m, pieces[i], bf) ? true : superCap;
-            hasCaptureMove = superCap;
+            hasCaptureMove = hasCaptureMove ? true : superCap;
         }
 
         hasCaptureMove = checkCaptureMoves(m, move1, player, 0, bf) ? true : hasCaptureMove;
